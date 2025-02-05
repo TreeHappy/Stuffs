@@ -106,8 +106,15 @@ $apiEndpoint = "$jenkinsUrl/computer/$agentName/slave-agent.jnlp"
 # Make the API call
 $response = Invoke-RestMethod -Uri $apiEndpoint -Method Get -Credential (New-Object System.Management.Automation.PSCredential($username, (ConvertTo-SecureString $apiToken -AsPlainText -Force)))
 
-# Output the response
-$response
+# Load the response as XML
+[xml]$xmlResponse = $response
+
+# Extract the secret token
+$secretToken = $xmlResponse.jnlp.security.secret
+
+# Output the secret token
+Write-Output "The secret token for agent '$agentName' is: $secretToken"
+
 
 ```
 
