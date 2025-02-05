@@ -161,3 +161,11 @@ vagrant up --provider=hyperv
 
 This workflow lets you automate the entire process from ISO to a fully configured Windows 11 VM! 🚀
 
+
+## Links
+
+* https://github.com/Baune8D/packer-windows-desktop
+* https://gist.github.com/kvietmeier/3f296be759f201d7431cf3af4d53c2db
+* https://itvraag.nl/index.php/2023/01/23/installing-vagrant-hyper-v-on-windows-11/
+* https://github.com/rgl/windows-vagrant
+
