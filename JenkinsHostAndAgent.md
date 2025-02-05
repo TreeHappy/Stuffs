@@ -93,3 +93,21 @@ docker::run { 'jenkins':
 
 ```
 
+```powershell
+# Define variables
+$jenkinsUrl = "http://<jenkins-url>"  # Replace with your Jenkins URL
+$agentName = "MyAgent"                  # Replace with your agent name
+$username = "<username>"                 # Replace with your Jenkins username
+$apiToken = "<api_token>"                # Replace with your Jenkins API token
+
+# Construct the API endpoint
+$apiEndpoint = "$jenkinsUrl/computer/$agentName/slave-agent.jnlp"
+
+# Make the API call
+$response = Invoke-RestMethod -Uri $apiEndpoint -Method Get -Credential (New-Object System.Management.Automation.PSCredential($username, (ConvertTo-SecureString $apiToken -AsPlainText -Force)))
+
+# Output the response
+$response
+
+```
+
