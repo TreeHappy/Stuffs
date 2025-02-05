@@ -2,6 +2,20 @@
 # Jenkins Host and Agent in docker Compose
 
 
+## Docker Run Agent
+
+```bash
+docker run -d \
+  --name jenkins-agent \
+  --network host \  # Use host network to simplify access to Jenkins
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v jenkins-agent-workdir:/home/jenkins/agent \
+  -e JENKINS_URL=http://<JENKINS_HOST_IP>:8080 \  # Replace with your Jenkins host IP
+  -e JENKINS_AGENT_NAME=<AGENT_NAME> \            # Name from Jenkins UI (e.g., docker-agent)
+  -e JENKINS_SECRET=<SECRET_KEY> \                # Secret from Jenkins UI
+  --group-add $(stat -c '%g' /var/run/docker.sock) \  # Grant Docker socket access
+  jenkins/agent:latest-jdk11-docker
+```
 
 ## Docker Compose
 
