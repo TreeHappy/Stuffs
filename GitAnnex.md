@@ -39,3 +39,7 @@ git annex init --shared=group=mygroup
 ```
    This way, you can easily manage multiple clones that share the same annex data store, without having to specify the path to the annex data store manually.
 
+## Links
+
+* [Git Annex Tutorial](https://github.com/emanuele/git-annex_tutorial) contains information on init --shared.
+
