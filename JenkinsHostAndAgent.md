@@ -5,6 +5,8 @@
 
 ## Docker Copose
 
+
+```yaml
 version: '3.8'
 
 services:
@@ -30,4 +32,5 @@ services:
 volumes:
   jenkins_home:
 
+```
 
