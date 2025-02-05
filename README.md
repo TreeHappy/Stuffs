@@ -1,1 +1,1 @@
-![squirrel](/images/squirrel.png)
+![tree](/images/tree.png)
