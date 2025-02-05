@@ -1,0 +1,1 @@
+![squirrel](/images/squirrel.png)
