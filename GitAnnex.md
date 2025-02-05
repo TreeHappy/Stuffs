@@ -3,10 +3,13 @@ Yes, with Git Annex, you can achieve this by using the `git annex init --shared`
 Here's a step-by-step guide:
 
 1. Clone the repository for the first time and initialize Git Annex as you normally would:
-   ```bash
+
+
+```bash
 git clone <repository-url>
 cd <repository-name>
 git annex init
+```
 
 2. Clone the repository for the second time in a different directory:
 
