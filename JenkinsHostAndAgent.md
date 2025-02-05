@@ -69,15 +69,16 @@ docker::volume { 'jenkins_home':
   ensure => present,
 }
 
-# Pull the Jenkins image
-docker::image { 'jenkins/jenkins:lts':
+# Pull the latest Jenkins image
+docker::image { 'jenkins/jenkins':
   tag     => 'latest',
+  ensure  => 'latest',  # Ensure the latest image is pulled
   require => Class['docker'],
 }
 
 # Run the Jenkins container
 docker::run { 'jenkins':
-  image   => 'jenkins/jenkins:lts',
+  image   => 'jenkins/jenkins:latest',  # Use the latest tag
   ports   => ['8080:8080', '50000:50000'],
   volumes => ['/var/jenkins_home'],
   env     => {
@@ -85,9 +86,10 @@ docker::run { 'jenkins':
   },
   restart => 'unless-stopped',
   require => [
-    Docker::Image['jenkins/jenkins:lts'],
+    Docker::Image['jenkins/jenkins'],
     Docker::Volume['jenkins_home'],
   ],
 }
+
 ```
 
