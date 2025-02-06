@@ -156,4 +156,25 @@ Console.WriteLine($"Generated token: {accessToken}");
 This implementation maintains the same security flow as the original curl commands while using C#'s native HTTP and JSON handling capabilities.
 
 https://github.com/jenkins-zh/jenkins-cli/blob/c926d60cb6f97f9e28f9e1bee689ceaa48a6622c/client/user.go#L102
+https://stackoverflow.com/questions/45466090/how-to-get-the-api-token-for-jenkins
 
+```bash
+#!/bin/bash
+
+FILE=/var/lib/jenkins/api_token.txt
+
+if [ -f "$FILE" ]; then
+    echo "$FILE exists."
+else 
+    echo "$FILE does not exist."
+    JENKINS_URL=http://127.0.0.1:8080
+    JENKINS_USER=admin
+    JENKINS_USER_PASS={{ jenkins_admin_password }}
+
+    JENKINS_CRUMB=$(curl -u $JENKINS_USER:$JENKINS_USER_PASS -s -c /tmp/cookies $JENKINS_URL'/crumbIssuer/api/json' | jq -r '.crumb')
+    ACCESS_TOKEN=$(curl -u $JENKINS_USER:$JENKINS_USER_PASS -H "Jenkins-Crumb:$JENKINS_CRUMB" -s \
+                        -b /tmp/cookies $JENKINS_URL'/me/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken' \
+                        --data 'newTokenName=GlobalToken' | jq -r '.data.tokenValue')
+    echo $ACCESS_TOKEN > /var/lib/jenkins/api_token.txt
+fi
+```
