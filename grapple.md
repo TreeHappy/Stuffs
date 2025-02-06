@@ -1,4 +1,4 @@
-Here's a highly configurable version with improved separation of concerns and customization points:
+Here's the enhanced version with visibility toggling and full customization support:
 
 ```go
 package main
@@ -13,50 +13,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Catppuccin Mocha color palette
-var catppuccin = struct {
-	Rosewater  lipgloss.Color
-	Flamingo   lipgloss.Color
-	Pink       lipgloss.Color
-	Mauve      lipgloss.Color
-	Red        lipgloss.Color
-	Maroon     lipgloss.Color
-	Peach      lipgloss.Color
-	Yellow     lipgloss.Color
-	Green      lipgloss.Color
-	Teal       lipgloss.Color
-	Sky        lipgloss.Color
-	Sapphire   lipgloss.Color
-	Blue       lipgloss.Color
-	Lavender   lipgloss.Color
-	Text       lipgloss.Color
-	Overlay0   lipgloss.Color
-	Surface2   lipgloss.Color
-	Base       lipgloss.Color
-	Mantle     lipgloss.Color
-	Crust      lipgloss.Color
-}{
-	Rosewater:  "#F5E0DC",
-	Flamingo:   "#F2CDCD",
-	Pink:       "#F5C2E7",
-	Mauve:     "#CBA6F7",
-	Red:       "#F38BA8",
-	Maroon:    "#EBA0AC",
-	Peach:     "#FAB387",
-	Yellow:    "#F9E2AF",
-	Green:     "#A6E3A1",
-	Teal:      "#94E2D5",
-	Sky:       "#89DCEB",
-	Sapphire:  "#74C7EC",
-	Blue:      "#89B4FA",
-	Lavender:  "#B4BEFE",
-	Text:      "#CDD6F4",
-	Overlay0:  "#6C7086",
-	Surface2:  "#585B70",
-	Base:      "#1E1E2E",
-	Mantle:    "#181825",
-	Crust:     "#11111B",
-}
+// ... (catppuccin color palette remains the same) ...
 
 type Theme struct {
 	InputBorder        lipgloss.Color
@@ -69,12 +26,13 @@ type Theme struct {
 }
 
 type KeyMap struct {
-	Execute     tea.Key
-	NormalMode  tea.Key
-	InsertMode  rune
-	NavigateUp  tea.Key
-	NavigateDown tea.Key
-	Quit        tea.Key
+	Execute          tea.Key
+	NormalMode       tea.Key
+	InsertMode       rune
+	NavigateUp       tea.Key
+	NavigateDown     tea.Key
+	ToggleVisibility rune
+	Quit             tea.Key
 }
 
 type Config struct {
@@ -89,6 +47,7 @@ type msgExecResult struct {
 	output     string
 	err        error
 	replaceIdx int
+	visible    bool
 }
 
 type model struct {
@@ -105,12 +64,13 @@ func defaultConfig() Config {
 		Shell:     "zsh",
 		ShellArgs: []string{"-c"},
 		Keys: KeyMap{
-			Execute:     tea.KeyEnter,
-			NormalMode:  tea.KeyEsc,
-			InsertMode:  'i',
-			NavigateUp:  tea.KeyUp,
-			NavigateDown: tea.KeyDown,
-			Quit:        tea.KeyCtrlC,
+			Execute:          tea.KeyEnter,
+			NormalMode:       tea.KeyEsc,
+			InsertMode:       'i',
+			NavigateUp:       tea.KeyUp,
+			NavigateDown:     tea.KeyDown,
+			ToggleVisibility: 's',
+			Quit:             tea.KeyCtrlC,
 		},
 		Theme: Theme{
 			InputBorder:      catppuccin.Mauve,
@@ -127,26 +87,7 @@ func defaultConfig() Config {
 	}
 }
 
-func initialModel(cfg Config) model {
-	ti := textinput.New()
-	ti.Prompt = cfg.Theme.InputPrompt
-	ti.Placeholder = cfg.Theme.InputPlaceholder
-	ti.PromptStyle = ti.PromptStyle.Foreground(catppuccin.Text)
-	ti.TextStyle = ti.TextStyle.Foreground(catppuccin.Text)
-	ti.Focus()
-
-	return model{
-		input:      ti,
-		history:    make([]msgExecResult, 0),
-		cmdHistory: make([]string, 0),
-		mode:       "insert",
-		config:     cfg,
-	}
-}
-
-func (m model) Init() tea.Cmd {
-	return textinput.Blink
-}
+// ... (initialModel remains the same) ...
 
 func (m model) executeCommand(cmd string, replaceIdx int) tea.Cmd {
 	return func() tea.Msg {
@@ -157,6 +98,7 @@ func (m model) executeCommand(cmd string, replaceIdx int) tea.Cmd {
 			output:     strings.TrimSpace(string(out)),
 			err:        err,
 			replaceIdx: replaceIdx,
+			visible:    true,
 		}
 	}
 }
@@ -204,12 +146,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if m.selectedIdx < len(m.history)-1 {
 					m.selectedIdx++
 				}
-			case msg.Runes != nil && len(msg.Runes) > 0 && msg.Runes[0] == m.config.Keys.InsertMode:
-				if m.selectedIdx != -1 {
-					m.input.SetValue(m.history[m.selectedIdx].cmd)
+			case msg.Runes != nil && len(msg.Runes) > 0:
+				switch msg.Runes[0] {
+				case m.config.Keys.InsertMode:
+					if m.selectedIdx != -1 {
+						m.input.SetValue(m.history[m.selectedIdx].cmd)
+					}
+					m.mode = "insert"
+					m.input.Focus()
+				case m.config.Keys.ToggleVisibility:
+					if m.selectedIdx != -1 {
+						m.history[m.selectedIdx].visible = !m.history[m.selectedIdx].visible
+					}
 				}
-				m.mode = "insert"
-				m.input.Focus()
 			}
 
 		default:
@@ -229,26 +178,39 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) renderBox(content string, isInput bool, selected bool) string {
-	style := lipgloss.NewStyle().
-		Border(m.config.Theme.BorderStyle).
-		Padding(1, 2).
-		Margin(1, 0)
-
 	if selected {
-		style = style.BorderForeground(m.config.Theme.HighlightBorder)
-	} else if isInput {
-		style = style.BorderForeground(m.config.Theme.InputBorder)
-	} else {
-		style = style.BorderForeground(m.config.Theme.OutputBorder)
+		return lipgloss.NewStyle().
+			Border(m.config.Theme.BorderStyle).
+			BorderForeground(m.config.Theme.HighlightBorder).
+			Padding(1, 2).
+			Margin(1, 0).
+			Render(content)
 	}
 
-	return style.Render(content)
+	if isInput {
+		return lipgloss.NewStyle().
+			Border(m.config.Theme.BorderStyle).
+			BorderForeground(m.config.Theme.InputBorder).
+			Padding(1, 2).
+			Margin(1, 0).
+			Render(content)
+	}
+
+	return lipgloss.NewStyle().
+		Border(m.config.Theme.BorderStyle).
+		BorderForeground(m.config.Theme.OutputBorder).
+		Padding(1, 2).
+		Margin(1, 0).
+		Render(content)
 }
 
 func (m model) View() string {
 	var sb strings.Builder
 
 	for i, result := range m.history {
+		if !result.visible {
+			continue
+		}
 		selected := m.mode == "normal" && i == m.selectedIdx
 		sb.WriteString(m.renderBox("> "+result.cmd, true, selected) + "\n")
 		
@@ -265,6 +227,9 @@ func (m model) View() string {
 		status := "NORMAL MODE"
 		if m.selectedIdx != -1 {
 			status += " | Selected: " + m.history[m.selectedIdx].cmd
+			if !m.history[m.selectedIdx].visible {
+				status += " (hidden)"
+			}
 		}
 		sb.WriteString(m.config.Theme.StatusBar.Render(status))
 	}
@@ -272,83 +237,29 @@ func (m model) View() string {
 	return sb.String()
 }
 
-func main() {
-	cfg := defaultConfig()
-	p := tea.NewProgram(initialModel(cfg), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		panic(err)
-		os.Exit(1)
-	}
-}
+// ... (main remains the same) ...
 ```
 
-Key improvements and customization points:
+Key additions:
+1. Added `ToggleVisibility` key binding (default 's')
+2. Each history entry has a `visible` boolean flag
+3. Pressing 's' in normal mode toggles visibility of selected cell
+4. Hidden cells are not rendered but remain in history
+5. Navigation works through hidden cells
+6. Status bar shows if selected cell is hidden
+7. New commands and re-run commands are always visible
 
-1. **Configurable Key Bindings**:
-```go
-type KeyMap struct {
-	Execute     tea.Key
-	NormalMode  tea.Key
-	InsertMode  rune
-	NavigateUp  tea.Key
-	NavigateDown tea.Key
-	Quit        tea.Key
-}
-```
-Modify these in the `defaultConfig()` function
+Usage:
+- In normal mode (Esc):
+  - Ctrl+↑/↓ to navigate cells
+  - 's' to toggle visibility of selected cell
+  - 'i' to edit selected cell's command
+- Hidden cells are preserved but not rendered
+- Selected hidden cells show "(hidden)" in status bar
+- Re-running a command makes it visible again
 
-2. **Complete Theme Support**:
-```go
-type Theme struct {
-	InputBorder        lipgloss.Color
-	OutputBorder       lipgloss.Color
-	HighlightBorder    lipgloss.Color
-	StatusBar          lipgloss.Style
-	InputPrompt        string
-	InputPlaceholder   string
-	BorderStyle        lipgloss.Border
-}
-```
-Uses Catppuccin Mocha colors by default
-
-3. **Terminal Color Preservation**:
-- Output is rendered without additional styling to preserve ANSI colors
-- Only borders are styled while content remains untouched
-
-4. **Configurable Shell**:
-```go
-Config struct {
-	Shell     string
-	ShellArgs []string
-}
-```
-Default is zsh (`Shell: "zsh", ShellArgs: []string{"-c"}`)
-
-5. **Usage**:
-- Press configured `InsertMode` key ('i' by default) in normal mode to edit
-- Customize by modifying the `defaultConfig()` values
-- Change shell by modifying `Shell` and `ShellArgs`
-- Update colors in the `Theme` struct
-- Modify key bindings in the `KeyMap` struct
-
-To customize, create a modified config:
-```go
-func customConfig() Config {
-	cfg := defaultConfig()
-	cfg.Theme.InputBorder = "#FF0000"
-	cfg.Keys.InsertMode = 'e'
-	cfg.Shell = "bash"
-	return cfg
-}
-```
-
-Then use `initialModel(customConfig())` in main()
-
-This version provides proper separation between:
-- Key binding configuration
-- Visual styling
-- Execution parameters
-- Business logic
-
-All components can be modified independently without touching the core REPL logic.
+Customization:
+- Change toggle key in config: `cfg.Keys.ToggleVisibility = 'v'`
+- Modify visibility behavior through the `visible` flag in history entries
+- Adjust visual presentation in `renderBox` method
 
