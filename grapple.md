@@ -13,7 +13,50 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// ... (catppuccin color palette remains the same) ...
+// Catppuccin Mocha color palette
+var catppuccin = struct {
+	Rosewater  lipgloss.Color
+	Flamingo   lipgloss.Color
+	Pink       lipgloss.Color
+	Mauve      lipgloss.Color
+	Red        lipgloss.Color
+	Maroon     lipgloss.Color
+	Peach      lipgloss.Color
+	Yellow     lipgloss.Color
+	Green      lipgloss.Color
+	Teal       lipgloss.Color
+	Sky        lipgloss.Color
+	Sapphire   lipgloss.Color
+	Blue       lipgloss.Color
+	Lavender   lipgloss.Color
+	Text       lipgloss.Color
+	Overlay0   lipgloss.Color
+	Surface2   lipgloss.Color
+	Base       lipgloss.Color
+	Mantle     lipgloss.Color
+	Crust      lipgloss.Color
+}{
+	Rosewater:  "#F5E0DC",
+	Flamingo:   "#F2CDCD",
+	Pink:       "#F5C2E7",
+	Mauve:     "#CBA6F7",
+	Red:       "#F38BA8",
+	Maroon:    "#EBA0AC",
+	Peach:     "#FAB387",
+	Yellow:    "#F9E2AF",
+	Green:     "#A6E3A1",
+	Teal:      "#94E2D5",
+	Sky:       "#89DCEB",
+	Sapphire:  "#74C7EC",
+	Blue:      "#89B4FA",
+	Lavender:  "#B4BEFE",
+	Text:      "#CDD6F4",
+	Overlay0:  "#6C7086",
+	Surface2:  "#585B70",
+	Base:      "#1E1E2E",
+	Mantle:    "#181825",
+	Crust:     "#11111B",
+}
 
 type Theme struct {
 	InputBorder        lipgloss.Color
@@ -87,7 +130,26 @@ func defaultConfig() Config {
 	}
 }
 
-// ... (initialModel remains the same) ...
+func initialModel(cfg Config) model {
+	ti := textinput.New()
+	ti.Prompt = cfg.Theme.InputPrompt
+	ti.Placeholder = cfg.Theme.InputPlaceholder
+	ti.PromptStyle = ti.PromptStyle.Foreground(catppuccin.Text)
+	ti.TextStyle = ti.TextStyle.Foreground(catppuccin.Text)
+	ti.Focus()
+
+	return model{
+		input:      ti,
+		history:    make([]msgExecResult, 0),
+		cmdHistory: make([]string, 0),
+		mode:       "insert",
+		config:     cfg,
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return textinput.Blink
+}
 
 func (m model) executeCommand(cmd string, replaceIdx int) tea.Cmd {
 	return func() tea.Msg {
@@ -237,7 +299,14 @@ func (m model) View() string {
 	return sb.String()
 }
 
-// ... (main remains the same) ...
+func main() {
+	cfg := defaultConfig()
+	p := tea.NewProgram(initialModel(cfg), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		panic(err)
+		os.Exit(1)
+	}
+}
 ```
 
 Key additions:
