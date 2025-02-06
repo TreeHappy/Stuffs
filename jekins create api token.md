@@ -179,3 +179,87 @@ else
     echo $ACCESS_TOKEN > /var/lib/jenkins/api_token.txt
 fi
 ```
+
+param(
+    [string]$JenkinsUrl,
+    [string]$Username,
+    [string]$Password
+)
+
+# Function to get Jenkins crumb and cookies
+function Get-JenkinsCrumbAndCookies {
+    param (
+        [string]$JenkinsUrl,
+        [string]$Username,
+        [string]$Password
+    )
+
+    $loginUrl = "$JenkinsUrl/j_acegi_security_check"
+    $crumbUrl = "$JenkinsUrl/crumbIssuer/api/json"
+
+    # Create a new session
+    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+    # Perform login to get cookies
+    $loginResponse = Invoke-WebRequest -Uri $loginUrl -Method Post -Body @{
+        j_username = $Username
+        j_password = $Password
+    } -SessionVariable session
+
+    if ($loginResponse.StatusCode -eq 200 -or $loginResponse.StatusCode -eq 302) {
+        $crumbResponse = Invoke-RestMethod -Uri $crumbUrl -Method Get -WebSession $session
+        return @{
+            Crumb = $crumbResponse.crumb
+            Cookies = $session.Cookies
+        }
+    } else {
+        Write-Error "Failed to login and get Jenkins crumb."
+        return $null
+    }
+}
+
+# Function to generate Jenkins API token
+function Generate-JenkinsAPIToken {
+    param (
+        [string]$JenkinsUrl,
+        [string]$Username,
+        [string]$Password,
+        [string]$Crumb,
+        [System.Net.CookieContainer]$Cookies
+    )
+
+    $tokenUrl = "$JenkinsUrl/me/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken"
+    $body = @{
+        newTokenName = "FirstAPIToken"
+    } | ConvertTo-Json
+
+    $headers = @{
+        "Jenkins-Crumb" = $Crumb
+    }
+
+    $response = Invoke-RestMethod -Uri $tokenUrl -Method Post -Body $body -Headers $headers -ContentType "application/json" -WebSession $Cookies
+
+    if ($response?.data?.tokenValue) {
+        return $response.data.tokenValue
+    } else {
+        Write-Error "Failed to generate Jenkins API token."
+        return $null
+    }
+}
+
+# Main script
+if (-not $JenkinsUrl -or -not $Username -or -not $Password) {
+    Write-Error "Please provide JenkinsUrl, Username, and Password as parameters."
+    exit 1
+}
+
+$crumbAndCookies = Get-JenkinsCrumbAndCookies -JenkinsUrl $JenkinsUrl -Username $Username -Password $Password
+
+if ($crumbAndCookies) {
+    $apiToken = Generate-JenkinsAPIToken -JenkinsUrl $JenkinsUrl -Username $Username -Password $Password -Crumb $crumbAndCookies.Crumb -Cookies $crumbAndCookies.Cookies
+
+    if ($apiToken) {
+        Write-Output "Generated Jenkins API Token: $apiToken"
+    }
+}
+
