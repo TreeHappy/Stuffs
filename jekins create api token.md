@@ -155,6 +155,7 @@ Console.WriteLine($"Generated token: {accessToken}");
 
 This implementation maintains the same security flow as the original curl commands while using C#'s native HTTP and JSON handling capabilities.
 
+https://community.jenkins.io/t/jenkins-rest-api-to-create-an-agent/24730
 https://github.com/jenkins-zh/jenkins-cli/blob/c926d60cb6f97f9e28f9e1bee689ceaa48a6622c/client/user.go#L102
 https://stackoverflow.com/questions/45466090/how-to-get-the-api-token-for-jenkins
 
