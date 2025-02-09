@@ -10,7 +10,7 @@ function RunScriptWithEnvVars ($envFile, $scriptBlock)
   $scriptBlockString = $scriptBlock.ToString()
 
   # Run the command with the environment variables
-  pwsh -c $scriptBlockString
+  op run --env-file=$envFile -- pwsh -c $scriptBlockString
 }
 
 # Run the script with the 1Password environment variables
