@@ -20,6 +20,20 @@ jenkins:
       authenticators: []
 ```
 
+```yaml
+jenkins:
+  securityRealm:
+    azureAd:
+      clientId: "YOUR_CLIENT_ID"
+      clientSecret: "YOUR_CLIENT_SECRET"
+      tenantId: "YOUR_TENANT_ID"
+      allowedGroups:
+        - "YOUR_AAD_GROUP_NAME"  # Replace with your actual Azure AD group name
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false  # Prevent anonymous access
+
+
 **Setup Instructions:**
 1. Create a credential in Jenkins:
    - Type: **Microsoft Azure Service Principal**
@@ -34,6 +48,7 @@ jenkins:
    - User.Read
    - email
    ```
+```
 
 3. Features:
    - ✅ Authenticated users get full administrative privileges
