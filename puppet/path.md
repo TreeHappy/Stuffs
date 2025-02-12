@@ -29,7 +29,7 @@ mod 'my_module',
 - Ensure the subdirectory in the repository contains valid Puppet module structure (e.g., `manifests/`, `files/`, `metadata.json`).
 
 ### Tools Supporting This:
-- **r10k**: Works with Puppetfiles and supports both `:path` and `:install_path`.
+- **r10k**: Works with  uppetfiles and supports both `:path` and `:install_path`.
 - **Puppet Code Manager**: Also uses Puppetfiles for environment setup.
 
 ### References:
