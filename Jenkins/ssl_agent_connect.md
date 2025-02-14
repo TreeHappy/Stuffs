@@ -27,3 +27,69 @@ Yes, it is definitely possible to run a Jenkins server in a Docker container usi
 
 In summary, running Jenkins with self‑signed certificates requires some additional effort to ensure that all connected systems trust your certificate. Once properly set up, both the Jenkins server and its agents should be able to communicate securely over SSL.
 
+To connect an inbound Jenkins agent container to a Jenkins master with a self-signed SSL certificate, you need to ensure the agent trusts the certificate. Here's a step-by-step solution:
+
+### 1. **Export the Jenkins Master's Certificate**
+   - **From the Jenkins Master Host**:
+     ```bash
+     openssl s_client -connect jenkins-master:443 </dev/null | openssl x509 -outform PEM > jenkins-master.crt
+     ```
+   - Replace `jenkins-master` with the hostname or IP of your Jenkins master.
+
+### 2. **Create a Custom Agent Docker Image**
+   - **Dockerfile**:
+     ```dockerfile
+     FROM jenkins/inbound-agent:latest
+
+     # Switch to root to modify system files
+     USER root
+
+     # Copy the certificate into the image
+     COPY jenkins-master.crt /tmp/jenkins-master.crt
+
+     # Import the certificate into the Java truststore
+     RUN keytool -import -noprompt \
+         -alias jenkins-master \
+         -file /tmp/jenkins-master.crt \
+         -keystore $JAVA_HOME/lib/security/cacerts \
+         -storepass changeit
+
+     # Switch back to the jenkins user
+     USER jenkins
+     ```
+   - **Replace `$JAVA_HOME`** with the correct path (e.g., `/usr/local/openjdk-11/lib/security/cacerts` for JDK 11).
+
+### 3. **Build the Custom Agent Image**
+   ```bash
+   docker build -t custom-jenkins-agent .
+   ```
+
+### 4. **Run the Agent Container**
+   - Use the custom image when starting the agent:
+     ```bash
+     docker run -d --name jenkins-agent \
+       -e JENKINS_URL=https://jenkins-master:443 \
+       -e JENKINS_SECRET=<AGENT_SECRET> \
+       -e JENKINS_AGENT_NAME=<AGENT_NAME> \
+       custom-jenkins-agent
+     ```
+   - Replace `<AGENT_SECRET>` and `<AGENT_NAME>` with values from your Jenkins master.
+
+### Alternative: Disable Certificate Verification (Not Recommended)
+   - Add `-noCertificateCheck` to the agent's JNLP arguments:
+     ```bash
+     java -jar agent.jar -jnlpUrl https://jenkins-master:443/... -noCertificateCheck -secret <SECRET>
+     ```
+
+### Verify the Connection
+   - Check the agent logs to ensure it connects without SSL errors.
+
+### Notes
+- **Java Truststore Path**: Confirm the correct `cacerts` path in your base image.
+- **Hostname Mismatch**: Ensure the certificate's SAN includes the hostname used by the agent to connect.
+- **Reverse Proxy**: If using a proxy, export its certificate instead.
+
+By importing the self-signed certificate into the agent's truststore, the agent will trust the Jenkins master's SSL certificate, resolving the validation error.
+
+* https://community.jenkins.io/t/how-to-connect-agent-jnlp-over-https/7294
+
