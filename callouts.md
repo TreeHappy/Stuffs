@@ -1,7 +1,11 @@
 # Callouts
 
 >[!NOTE]
+>
+
 >[!TIP]
+>
+
 >[!IMPORTANT]
 >[!WARNING]
 >[!CAUTION]
@@ -27,3 +31,6 @@
 >[!EXAMPLE]
 >[!QUOTE]
 >[!CITE]
+
+----
+
