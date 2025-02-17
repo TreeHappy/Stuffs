@@ -2,7 +2,7 @@
 
 >[!NOTE]
 
->[!TIP]
+>[!tip]
 
 >[!IMPORTANT]
 
