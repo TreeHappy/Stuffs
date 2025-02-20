@@ -83,3 +83,7 @@ This requires a token with registry read access.
 
 For more details, refer to the [Gitea API Documentation](https://docs.gitea.com/api/next/).
 
+## Delete the package using its ID:
+
+curl -X DELETE "https://your-gitea.com/api/v1/packages/{owner}/123" \
+  -H "Authorization: token YOUR_ACCESS_TOKEN"
