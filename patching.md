@@ -1,6 +1,7 @@
 # Patching
 
 https://github.com/sisong/HDiffPatch
+https://github.com/CollapseLauncher/SharpHDiffPatch.Core
 
 
 # Incremental Patch Script for Application Bin Directory
