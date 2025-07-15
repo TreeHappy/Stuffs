@@ -4,5 +4,5 @@ How ?
 
 ## Tech
 
-[[moon#Links]]
+[[moon]]
 [[bazel#Links]]
