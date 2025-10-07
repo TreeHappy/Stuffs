@@ -13,6 +13,7 @@ WORKDIR /app
 COPY --link requirements.txt .
 
 # Install the requirements using uv
+RUN pip install "marimo[recommended]"
 RUN uv pip install -r requirements.txt
 
 # Copy application files

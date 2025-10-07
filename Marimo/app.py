@@ -7,9 +7,6 @@ app = marimo.App()
 @app.cell
 def _():
     import marimo as mo
-    import duckdb as dbd
-    import sqlglot as ss
-
     return (mo,)
 
 
@@ -17,18 +14,9 @@ def _():
 def _(mo):
     _df = mo.sql(
         f"""
-        SELECT * FROM READ_CSV('Music.csv')
+        SELECT * FROM READ_CSV('Music.csv', DELIM='~')
         """
     )
-    return
-
-
-@app.cell
-def _():
-    import duckdb
-
-    DATABASE_URL = "Music.csv"
-    engine = duckdb.connect(DATABASE_URL, read_only=True)
     return
 
 
