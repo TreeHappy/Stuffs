@@ -10,11 +10,11 @@ ENV UV_SYSTEM_PYTHON=1
 WORKDIR /app
 
 # Copy requirements file
-COPY --link requirements.txt .
+COPY --link "requirements.txt" .
 
 # Install the requirements using uv
 RUN pip install "marimo[recommended]"
-RUN uv pip install -r requirements.txt
+RUN uv pip install -r "requirements.txt"
 
 # Copy application files
 # COPY --link app.py .
@@ -27,6 +27,6 @@ EXPOSE 8080
 RUN useradd -m app_user
 USER app_user
 
-CMD [ "marimo", "edit", "app.py", "--host", "0.0.0.0", "-p", "8080" ]
+CMD [ "marimo", "edit", "Marimo/dicy.py", "--host", "0.0.0.0", "-p", "8080" ]
 # CMD [ "marimo", "run", "app.py", "--host", "0.0.0.0", "-p", "8080" ]
 
