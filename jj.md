@@ -1,5 +1,10 @@
 # JJ
 
+## Notes
+
+* when wanting to push to remote use bookmark track and move
+  * [Remotes and tracked braches - documentation](https://jj-vcs.github.io/jj/latest/bookmarks/#remotes-and-tracked-bookmarks)
+
 ## Links
 
 * [Jujutsu docs](https://jj-vcs.github.io/jj/latest/)
